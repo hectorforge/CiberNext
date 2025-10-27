@@ -1144,7 +1144,7 @@ UPDATE Consultas c
 JOIN RegistroAlumno ra ON c.registro_alumno_id = ra.id
 SET c.usuario_id = ra.profesor_usuario_id
 WHERE c.usuario_id NOT IN (ra.alumno_usuario_id, ra.profesor_usuario_id)
-and EXISTS (SELECT 1 FROM Profesor a WHERE a.usuario_id = C.usuario_id);
+and EXISTS (SELECT 1 FROM Profesor a WHERE a.usuario_id = c.usuario_id);
 
 
 -- ================================================================================= --
