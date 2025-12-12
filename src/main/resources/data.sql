@@ -1657,13 +1657,13 @@ where tipo_documento_id = 5;
 
 
 update Usuario
-set foto_perfil = 'http://localhost:8080/imagenes/admin.png'
+set foto_perfil = '/imagenes/admin.png'
 where email like '%sistema.com';
 
 update Usuario
-set foto_perfil = 'http://localhost:8080/imagenes/profesor.png'
+set foto_perfil = '/imagenes/profesor.png'
 where email like '%profesor.com';
 
 update Usuario
-set foto_perfil = 'http://localhost:8080/imagenes/alumno.png'
+set foto_perfil = '/imagenes/alumno.png'
 where email like '%alumno.com';

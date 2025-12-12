@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 
 @SpringBootApplication
-@PropertySource("classpath:env.properties")
+@PropertySource(value = "classpath:env.properties", ignoreResourceNotFound = true)
 public class CibernextApplication {
 
     public static void main(String[] args) {

@@ -1,6 +1,7 @@
 package pe.edu.cibernext.security.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -18,7 +19,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import pe.edu.cibernext.jwt.JwtAuthFilter;
 import pe.edu.cibernext.security.user.CustomUserDetailsService;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -27,6 +30,10 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService service;
     private final JwtAuthFilter jwtAuthFilter;
+
+    // Leer orígenes desde propiedad (coma-separados). Por defecto '*' para desarrollo.
+    @Value("${app.cors.allowed-origins:*}")
+    private String allowedOriginsProp;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,6 +49,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**",
                                 "/documentos/**", "/imagenes/**"
                         ).permitAll()
+                        // Permitir OPTIONS explícitamente (útil para preflight desde distintos orígenes)
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/api/administradores/**").hasRole("ADMIN")
                         .requestMatchers("/api/profesores/**").hasRole("PROFESOR")
@@ -80,9 +89,29 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+
+        // Evitar NPE: normalizar allowedOriginsProp
+        String allowed = (allowedOriginsProp == null) ? "*" : allowedOriginsProp.trim();
+
+        // allowed puede ser '*' o una lista separada por comas de orígenes/patrones
+        if (allowed.equals("*")) {
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            List<String> origins = Arrays.stream(allowed.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+            if (!origins.isEmpty()) {
+                config.setAllowedOriginPatterns(origins);
+            } else {
+                config.setAllowedOriginPatterns(List.of("*"));
+            }
+        }
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        // Exponer cabeceras que el cliente pueda necesitar (Authorization, etc.)
+        config.setExposedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
